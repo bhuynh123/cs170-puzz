@@ -21,3 +21,22 @@ Follow basic outline of search algorithm
 3. uniform cost
 4. hueristic
 5. misplaced tile
+
+
+void generalSearch(problem, q-ing function) {
+
+    nodes = make-q(make-node(problem.inital state))
+
+    loop do
+
+    if empty(nodes)
+
+        return failure
+
+        node = remove-front(nodes)
+
+    if problem.testforgoal (node state) succeeds then return node
+        node = q-ing func(node, expand(node problem.operator))
+
+    end
+}
