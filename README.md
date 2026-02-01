@@ -18,11 +18,11 @@ Follow basic outline of search algorithm
    
         Node {
    
-        state   // board representation
+        state   
    
-        parent  // previous node
+        parent  
    
-        action  // move taken
+        action  
 
        child
    
