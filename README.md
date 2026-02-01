@@ -23,10 +23,11 @@ Follow basic outline of search algorithm
         parent  // previous node
    
         action  // move taken
-   
-        cost    // path cost
+
+       child
    
         }
 3. uniform cost
 4. hueristic
 5. misplaced tile
+
