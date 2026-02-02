@@ -27,7 +27,10 @@ Follow basic outline of search algorithm
        child
    
         }
-3. uniform cost
-4. hueristic
-5. misplaced tile
+
+    e. store already explored notes and compare them to remove redundant states
+       i. need to create function that compares them and returns boolean
+4. uniform cost
+5. hueristic
+6. misplaced tile
 
