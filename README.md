@@ -30,7 +30,12 @@ Follow basic outline of search algorithm
 
     e. store already explored notes and compare them to remove redundant states
        i. need to create function that compares them and returns boolean
+    
 4. uniform cost
+    a. finished uniform cost for 2 x 2, then tweaked it for 8 x 8 2/3/2036 at least to find a solution
+        i. need to handle when there is no solution b/c nothing happens
+
+before i move on to step 5, I need to incorprate the interface
 5. hueristic
 6. misplaced tile
 

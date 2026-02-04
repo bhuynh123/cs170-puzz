@@ -1,16 +1,18 @@
 #include <iostream>
 #include <queue>
 #include <vector>
+#include <chrono>
 
 using namespace std;
 
 //height, width
-constexpr int w = 2;
+constexpr int w = 3;
 
 struct Node {
     int state[w][w]; //actualy state itself
     Node* parent;   
     string action; //backtrace to parent
+    int depth;
 
     //copy over constructor
     Node(int initialState[w][w]) {
@@ -21,6 +23,7 @@ struct Node {
         }
         parent = nullptr;
         action = "";
+        depth = 0; // initialize root depth
     }
 };
 
@@ -29,8 +32,8 @@ void printNode(Node* n) {
 
     cout << "Board:" << endl;
 
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++)
+    for (int i = 0; i < w; i++) {
+        for (int j = 0; j < w; j++)
             cout << n->state[i][j] << " ";
         cout << endl;
     }
@@ -72,14 +75,19 @@ bool redundantSearch(Node* n, const vector<Node*>& exploredAlready) {
 //look for 0 which indicates empty space and swap with valid moves
 void branchingFunction(Node* n, queue<Node*>& queue, const vector<Node*>& exploredAlready)  {
     //location (x,y) of zero
-    int row;
-    int column;
+    int row = -1;
+    int column = -1;
     for (int i = 0; i < w; i++) {
         for (int j = 0; j < w; j++) {
             if (n->state[i][j] == 0) {
                 row = i;
                 column = j;
+                //issues if 2 0s are found
+                break;
             }
+        }
+        if (row != -1) {
+            break;
         }
     }
     //possible moves
@@ -91,6 +99,7 @@ void branchingFunction(Node* n, queue<Node*>& queue, const vector<Node*>& explor
         if (!redundantSearch(upNode, exploredAlready)) {
             upNode->parent = n;
             upNode->action = "up";
+            upNode->depth = n->depth + 1;
             queue.push(upNode);
         } else {
             delete upNode; //avoid memory leak
@@ -102,6 +111,7 @@ void branchingFunction(Node* n, queue<Node*>& queue, const vector<Node*>& explor
         if (!redundantSearch(downNode, exploredAlready)) {
             downNode->parent = n;
             downNode->action = "down";
+            downNode->depth = n->depth + 1;
             queue.push(downNode);
         } else {
             delete downNode;
@@ -113,6 +123,7 @@ void branchingFunction(Node* n, queue<Node*>& queue, const vector<Node*>& explor
         if (!redundantSearch(leftNode, exploredAlready)) {
             leftNode->parent = n;
             leftNode->action = "left";
+            leftNode->depth = n->depth + 1;
             queue.push(leftNode);
         } else {
             delete leftNode;
@@ -124,6 +135,7 @@ void branchingFunction(Node* n, queue<Node*>& queue, const vector<Node*>& explor
         if (!redundantSearch(rightNode, exploredAlready)) {
             rightNode->parent = n;
             rightNode->action = "right";
+            rightNode->depth = n->depth + 1;
             queue.push(rightNode);
         } else {
             delete rightNode;
@@ -171,10 +183,13 @@ void backtrace(Node* n) {
         printNode(path[i]);
     }
 
+    // print depth (number of moves from initial to goal)
+    cout << "Solution depth (moves): " << n->depth << endl;
+
     cout << endl;
 }
 
-void generalSearch(int initialState[2][2]) {
+void generalSearch(int initialState[w][w]) {
     
     //nodes = Make-Queue(MAKE-NODE(initialState))
     queue<Node*> explore;
@@ -214,24 +229,31 @@ int main() {
 //start as 2 x 2 array
 
     //goal state
-   int goalState[2][2] = { {1, 2}, {3, 0}};
+  //nt goalState[2][2] = { {1, 2}, {3, 0}};
 
    // 1 2
    // 3 0
 
 //input
-   int initialState[2][2] = { {1, 0}, {3, 2}};
+   //int initialState[2][2] = { {1, 0}, {3, 2}};
     // 1 0
     // 3 2
 
     //operators
     //up, down, left, right
     //generalSearch(initialState);
+    //int testState8[3][3] = { {1, 2, 3} , {5, 0, 6} , {4, 7, 8} };
+    //int testState12[3][3] = { {1, 3, 6} , {5, 0, 2} , {4, 7, 8} };
+      //int testState15[3][3] = { {1, 6, 4} , {5, 0, 7} , {2, 3, 8} };
+    //int testState[3][3] = { {4, 2, 7} , {5, 3, 8} , {6, 1, 0} };
 
-    int testState[2][2] = { {3, 0}, {2, 1}};
+    int testState14[3][3] = { {2, 8, 3} , {1, 6, 4} , {7, 0, 5} };
 
-    generalSearch(testState);
-
+    auto start = std::chrono::high_resolution_clock::now();
+    generalSearch(testState14);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    cout << "Elapsed time: " << ms << " ms (" << ms / 1000.0 << " s)" << endl;
 
     return 0;
 }
