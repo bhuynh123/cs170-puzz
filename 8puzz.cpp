@@ -249,13 +249,58 @@ int main() {
 
     //int testState17[3][3] = { {4, 3, 8} , {5, 0, 1} , {7, 2, 6} };
     //int testState
-    int testState27[3][3] = { {3, 0, 7} , {8, 6, 4} , { 2, 5, 1}};
+    //int testState27[3][3] = { {3, 0, 7} , {8, 6, 4} , { 2, 5, 1}};
 
-    auto start = std::chrono::high_resolution_clock::now();
-    generalSearch(testState27);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    cout << "Elapsed time: " << ms << " ms (" << ms / 1000.0 << " s)" << endl;
+    cout << "Welcome to my 170 8-Puzzle Solver. Type '1' to use a default puzzle, or '2' to create your own" << endl;
+    int choice;
+    int customState[w][w]  = { {0, 1, 2} , {4, 5, 3} , {7, 8, 6} };
+    cin >> choice;
+    if (choice == 1) {
+    }
+    if (choice == 2) {
+        //custom puzzle
+        
+        cout << " Enter your puzzle, using a zero to represent the blank. Please only enter valid 8-puzzles. " << endl;
 
+        cout << "Enter the puzzle delimiting the numbers with a space. Type RET only when finished." << endl;
+
+        for (int i = 0; i < w; i++) {
+            if (i == 0) {
+                cout << "First row: ";
+            } 
+            else if (i == 1) {
+                cout << "Second row: ";
+            } 
+            else {
+                cout << "Third row: ";
+            }
+            for (int j = 0; j < w; j++) {
+                cin >> customState[i][j];
+            }
+        }
+    }
+
+    
+
+    cout << "Select algorithm. (1) for Uniform Cost Search, (2) for the Misplaced Tile Heuristic, or (3) the Manhattan Distance Heuristic." << endl;
+    int searchChoice;
+    cin >> searchChoice;
+
+    if(searchChoice == 1) {
+        cout << "Uniform Cost Search selected. Solving..." << endl;
+        generalSearch(customState);
+    } 
+    else if (searchChoice == 2) {
+        cout << "Misplaced Tile Heuristic selected. Solving..." << endl;
+        //misplacedTileSearch(testState);
+    } 
+    else if (searchChoice == 3) {
+        cout << "Manhattan Distance Heuristic selected. Solving..." << endl;
+        //manhattanDistanceSearch(testState);
+    } 
+    else {
+        cout << "Invalid choice. Exiting." << endl;
+    }
+    
     return 0;
 }
