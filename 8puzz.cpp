@@ -2,6 +2,7 @@
 #include <queue>
 #include <vector>
 #include <chrono>
+#include <algorithm>
 
 using namespace std;
 
@@ -73,7 +74,7 @@ bool redundantSearch(Node* n, const vector<Node*>& exploredAlready) {
 //branching funciton
 //intution youtuve video solving 8 puzzle bfs python
 //look for 0 which indicates empty space and swap with valid moves
-void branchingFunction(Node* n, queue<Node*>& queue, const vector<Node*>& exploredAlready)  {
+void branchingFunction(Node* n, vector<Node*>& explore, const vector<Node*>& exploredAlready)  {
     //location (x,y) of zero
     int row = -1;
     int column = -1;
@@ -100,9 +101,9 @@ void branchingFunction(Node* n, queue<Node*>& queue, const vector<Node*>& explor
             upNode->parent = n;
             upNode->action = "up";
             upNode->depth = n->depth + 1;
-            queue.push(upNode);
+            explore.push_back(upNode);
         } else {
-            delete upNode; //avoid memory leak
+            delete upNode; 
         }
     }
     if (row < w - 1) { //down
@@ -112,7 +113,7 @@ void branchingFunction(Node* n, queue<Node*>& queue, const vector<Node*>& explor
             downNode->parent = n;
             downNode->action = "down";
             downNode->depth = n->depth + 1;
-            queue.push(downNode);
+            explore.push_back(downNode);
         } else {
             delete downNode;
         }
@@ -124,7 +125,7 @@ void branchingFunction(Node* n, queue<Node*>& queue, const vector<Node*>& explor
             leftNode->parent = n;
             leftNode->action = "left";
             leftNode->depth = n->depth + 1;
-            queue.push(leftNode);
+            explore.push_back(leftNode);
         } else {
             delete leftNode;
         }
@@ -136,7 +137,7 @@ void branchingFunction(Node* n, queue<Node*>& queue, const vector<Node*>& explor
             rightNode->parent = n;
             rightNode->action = "right";
             rightNode->depth = n->depth + 1;
-            queue.push(rightNode);
+            explore.push_back(rightNode);
         } else {
             delete rightNode;
         }
@@ -144,15 +145,20 @@ void branchingFunction(Node* n, queue<Node*>& queue, const vector<Node*>& explor
 
 }
 
-bool goalTest(Node* n) {
-
-    int goalState[w][w];
-
+void generateGoalState(int goalState[w][w]) {
     for(int i = 0; i < w; i++) {
         for(int j = 0; j < w; j++) {
             goalState[i][j] = i * w + j + 1;
         }
     }
+    goalState[w- 1][w - 1] = 0; 
+}
+
+bool goalTest(Node* n) {
+
+    int goalState[w][w];
+
+    generateGoalState(goalState);
 
     goalState[w-1][w-1] = 0; //set last element to 0
 
@@ -192,8 +198,8 @@ void backtrace(Node* n) {
 void generalSearch(int initialState[w][w]) {
     
     //nodes = Make-Queue(MAKE-NODE(initialState))
-    queue<Node*> explore;
-    explore.push(new Node(initialState));
+    vector<Node*> explore;
+    explore.push_back(new Node(initialState));
 
     vector<Node*> visited;
     bool found = false;
@@ -203,7 +209,7 @@ void generalSearch(int initialState[w][w]) {
 
         //node = REMOVE-FRONT(nodes)
         Node* currentNode = explore.front();
-        explore.pop();
+        explore.erase(explore.begin());
         visited.push_back(currentNode);
 
 
@@ -224,33 +230,74 @@ void generalSearch(int initialState[w][w]) {
 
 };
 
+//same as general search, but can't reorder a queue from the library so using a vector instead and sorting it based on the heuristic value of each node
+void misplacedTileSearch(int initialState[w][w]) {
+    
+    //nodes = Make-Queue(MAKE-NODE(initialState))
+    vector<Node*> explore;
+    explore.push_back(new Node(initialState));
+
+    vector<Node*> visited;
+    bool found = false;
+
+    //loop do
+    while (!explore.empty()) {
+
+        //node = REMOVE-FRONT(nodes)
+        Node* currentNode = explore.front();
+        explore.erase(explore.begin());
+        visited.push_back(currentNode);
+
+
+        //if problem.GOAL-TEST(node.STATE) succeeds, return solution
+        if (goalTest(currentNode)) {
+            cout << "Goal found" << endl;
+            found = true;
+            backtrace(currentNode);
+            break;
+        }
+        //nodes = queueiong function(nodes, expand(nodes, problem.operators))
+        branchingFunction(currentNode, explore, visited);
+    }
+
+    if (!found && explore.empty()) {
+        cout << "No Solution found" << endl;
+    }
+
+
+};
+
+int misplacedTiles(Node* n) {
+    
+    int goalState[w][w];
+
+    generateGoalState(goalState);
+
+    int value = 0;
+
+    for(int i = 0; i < w; i++) {
+        for(int j = 0; j < w; j++) {
+            // if nodes = goal state, not counting 0 or blank tile
+            if(n->state[i][j] != goalState[i][j] && n->state[i][j] != 0) {
+                value++;
+            }
+        }
+    }
+
+
+    return value;
+};
+
+void reorderByHn(vector<Node*>& nodes) {
+    //sort vector based on heuristic value of each node
+    sort(nodes.begin(), nodes.end(), [](Node* a, Node* b) {
+        return misplacedTiles(a) < misplacedTiles(b);
+    });
+}
+
 int main() {
    
-//start as 2 x 2 array
-
-    //goal state
-  //nt goalState[2][2] = { {1, 2}, {3, 0}};
-
-   // 1 2
-   // 3 0
-
-//input
-   //int initialState[2][2] = { {1, 0}, {3, 2}};
-    // 1 0
-    // 3 2
-
-    //operators
-    //up, down, left, right
-    //generalSearch(initialState);
-    //int testState8[3][3] = { {1, 2, 3} , {5, 0, 6} , {4, 7, 8} };
-   // int testState8[3][3] = { {1, 3, 6} , {5, 0, 2} , {4, 7, 8} };
-      //int testState15[3][3] = { {1, 6, 4} , {5, 0, 7} , {2, 3, 8} };
-    //int testState[3][3] = { {4, 2, 7} , {5, 3, 8} , {6, 1, 0} };
-
-    //int testState17[3][3] = { {4, 3, 8} , {5, 0, 1} , {7, 2, 6} };
-    //int testState
-    //int testState27[3][3] = { {3, 0, 7} , {8, 6, 4} , { 2, 5, 1}};
-
+  
     cout << "Welcome to my 170 8-Puzzle Solver. Type '1' to use a default puzzle, or '2' to create your own" << endl;
     int choice;
     int customState[w][w]  = { {0, 1, 2} , {4, 5, 3} , {7, 8, 6} };
@@ -262,7 +309,12 @@ int main() {
         
         cout << " Enter your puzzle, using a zero to represent the blank. Please only enter valid 8-puzzles. " << endl;
 
-        cout << "Enter the puzzle delimiting the numbers with a space. Type RET only when finished." << endl;
+        cout << "Enter the puzzle delimiting the numbers with a space. Once you have completed a line, PRESS ENTER to Start a new line" << endl;
+
+        cout << "Example: " << endl;
+        cout << "First row: 1 2 3 *press ENTER*" << endl;
+        cout << "Second row: 4 5 6 *press ENTER*" << endl;
+        cout << "Third row: 7 8 0 *press ENTER*" << endl << endl << endl;
 
         for (int i = 0; i < w; i++) {
             if (i == 0) {
@@ -292,7 +344,7 @@ int main() {
     } 
     else if (searchChoice == 2) {
         cout << "Misplaced Tile Heuristic selected. Solving..." << endl;
-        //misplacedTileSearch(testState);
+          misplacedTileSearch(customState);
     } 
     else if (searchChoice == 3) {
         cout << "Manhattan Distance Heuristic selected. Solving..." << endl;
