@@ -230,6 +230,34 @@ void generalSearch(int initialState[w][w]) {
 
 };
 
+int misplacedTiles(Node* n) {
+    
+    int goalState[w][w];
+
+    generateGoalState(goalState);
+
+    int value = 0;
+
+    for(int i = 0; i < w; i++) {
+        for(int j = 0; j < w; j++) {
+            // if nodes = goal state, not counting 0 or blank tile
+            if(n->state[i][j] != goalState[i][j] && n->state[i][j] != 0) {
+                value++;
+            }
+        }
+    }
+
+
+    return value;
+};
+
+void reorderByMisplaced(vector<Node*>& nodes) {
+    //sort vector based on heuristic value of each node
+    sort(nodes.begin(), nodes.end(), [](Node* a, Node* b) {
+        return misplacedTiles(a) < misplacedTiles(b);
+    });
+}
+
 //same as general search, but can't reorder a queue from the library so using a vector instead and sorting it based on the heuristic value of each node
 void misplacedTileSearch(int initialState[w][w]) {
     
@@ -258,6 +286,8 @@ void misplacedTileSearch(int initialState[w][w]) {
         }
         //nodes = queueiong function(nodes, expand(nodes, problem.operators))
         branchingFunction(currentNode, explore, visited);
+        reorderByMisplaced(explore);
+
     }
 
     if (!found && explore.empty()) {
@@ -267,37 +297,72 @@ void misplacedTileSearch(int initialState[w][w]) {
 
 };
 
-int misplacedTiles(Node* n) {
+int manhattanDistance(Node* n) {
     
-    int goalState[w][w];
-
-    generateGoalState(goalState);
-
+    vector<pair<int, int>> goalPositions = { {0, 0}, {0, 1}, {0, 2}, {1, 0}, {1, 1}, {1, 2}, {2, 0}, {2, 1} };
     int value = 0;
 
     for(int i = 0; i < w; i++) {
         for(int j = 0; j < w; j++) {
-            // if nodes = goal state, not counting 0 or blank tile
-            if(n->state[i][j] != goalState[i][j] && n->state[i][j] != 0) {
-                value++;
+        
+            if( n->state[i][j] != 0) {
+
+                value += (abs(i - goalPositions[n->state[i][j] - 1].first) + abs(j - goalPositions[n->state[i][j] - 1].second));
+                
             }
         }
     }
 
-
     return value;
+
 };
 
-void reorderByHn(vector<Node*>& nodes) {
+void reorderByManhattan(vector<Node*>& nodes) {
     //sort vector based on heuristic value of each node
     sort(nodes.begin(), nodes.end(), [](Node* a, Node* b) {
-        return misplacedTiles(a) < misplacedTiles(b);
+        return manhattanDistance(a) < manhattanDistance(b);
     });
 }
 
+void manhattanDistanceSearch(int initialState[w][w]) {
+
+//nodes = Make-Queue(MAKE-NODE(initialState))
+    vector<Node*> explore;
+    explore.push_back(new Node(initialState));
+
+    vector<Node*> visited;
+    bool found = false;
+
+    //loop do
+    while (!explore.empty()) {
+
+        //node = REMOVE-FRONT(nodes)
+        Node* currentNode = explore.front();
+        explore.erase(explore.begin());
+        visited.push_back(currentNode);
+
+
+        //if problem.GOAL-TEST(node.STATE) succeeds, return solution
+        if (goalTest(currentNode)) {
+            cout << "Goal found" << endl;
+            found = true;
+            backtrace(currentNode);
+            break;
+        }
+        //nodes = queueiong function(nodes, expand(nodes, problem.operators))
+        branchingFunction(currentNode, explore, visited);
+        reorderByManhattan(explore);
+    }
+
+    if (!found && explore.empty()) {
+        cout << "No Solution found" << endl;
+    }
+
+}
+
 int main() {
-   
-  
+
+
     cout << "Welcome to my 170 8-Puzzle Solver. Type '1' to use a default puzzle, or '2' to create your own" << endl;
     int choice;
     int customState[w][w]  = { {0, 1, 2} , {4, 5, 3} , {7, 8, 6} };
@@ -348,7 +413,7 @@ int main() {
     } 
     else if (searchChoice == 3) {
         cout << "Manhattan Distance Heuristic selected. Solving..." << endl;
-        //manhattanDistanceSearch(testState);
+        manhattanDistanceSearch(customState);
     } 
     else {
         cout << "Invalid choice. Exiting." << endl;
