@@ -14,6 +14,9 @@ struct Node {
     Node* parent;   
     string action; //backtrace to parent
     int depth;
+    //hueristic values
+    int misplaced;
+    int manhattan;
 
     //copy over constructor
     Node(int initialState[w][w]) {
@@ -25,8 +28,20 @@ struct Node {
         parent = nullptr;
         action = "";
         depth = 0; // initialize root depth
+        // 3x 3 = 9 + 1 < n is impossible
+        misplaced = 100;
+        // 4 is the most out of placed, 4 x 9  = 36 < n is impossible
+        manhattan = 100;
     }
 };
+
+void copyState(int end[w][w], const int original[w][w]) {
+    for (int i = 0; i < w; i++) {
+        for (int j = 0; j < w; j++) {
+            end[i][j] = original[i][j];
+        }
+    }
+}
 
 //print node for debugging
 void printNode(Node* n) {
@@ -187,6 +202,16 @@ void backtrace(Node* n) {
     // print boards from initial to goal
     for (int i = path.size() - 1; i >= 0; i--) {
         printNode(path[i]);
+        cout << endl << "g(n) (depth): " << path[i]->depth << endl;
+
+        if(path[i]->misplaced != 100) {
+            cout << "Misplaced Tiles h(n): " << path[i]->misplaced << endl;
+        }
+
+        if(path[i]->manhattan != 100) {
+            cout << "Manhattan Distance h(n): " << path[i]->manhattan << endl;
+        }
+         cout << endl;  
     }
 
     // print depth (number of moves from initial to goal)
@@ -247,7 +272,7 @@ int misplacedTiles(Node* n) {
         }
     }
 
-
+    n->misplaced = value;
     return value;
 };
 
@@ -312,7 +337,7 @@ int manhattanDistance(Node* n) {
             }
         }
     }
-
+    n->manhattan = value;
     return value;
 
 };
@@ -365,9 +390,42 @@ int main() {
 
     cout << "Welcome to my 170 8-Puzzle Solver. Type '1' to use a default puzzle, or '2' to create your own" << endl;
     int choice;
-    int customState[w][w]  = { {0, 1, 2} , {4, 5, 3} , {7, 8, 6} };
+    int customState[w][w];
     cin >> choice;
     if (choice == 1) {
+
+        cout << "You wish to use a default puzzle. Please enter a desired difficulty on a scale from 1 to 5 (1 being the easiest)." << endl << endl;
+        
+        int defaultChoice;
+        cin >> defaultChoice;
+
+        if (defaultChoice == 1) {
+            cout << "Trivial puzzle selected" << endl;
+            const int trivial[w][w]  = { {1, 2, 3} , {4, 5, 6} , {7, 8, 0} };
+            copyState(customState, trivial);
+        }
+        if ( defaultChoice == 2) {
+            cout << "Very Easy puzzle selected" << endl;
+            const int veryEasy[w][w]  = { {1, 2, 3} , {4, 5, 6} , {7, 0, 8} };
+            copyState(customState, veryEasy);
+        }
+        if (defaultChoice == 3) {
+            cout << "Easy puzzle selected" << endl;
+            const int easy[w][w]  = { {1, 2, 0} , {4, 5, 3} , {7, 8, 6} };
+            copyState(customState, easy);
+        }
+        if (defaultChoice == 4) {
+            cout << "Doable puzzle selected" << endl;
+            const int doable[w][w]  = { {0, 1, 2} , {4, 5, 3} , {7, 8, 6} };
+            copyState(customState, doable);
+        }
+        if (defaultChoice == 5) {
+            cout << "OH BOY" << endl;
+            const int ohBoy[w][w]  = { {8, 7, 1} , {6, 0, 2} , {5, 4, 3} };
+            copyState(customState, ohBoy);
+        }
+
+        
     }
     if (choice == 2) {
         //custom puzzle
@@ -404,15 +462,15 @@ int main() {
     cin >> searchChoice;
 
     if(searchChoice == 1) {
-        cout << "Uniform Cost Search selected. Solving..." << endl;
+        cout << "Uniform Cost Search selected " << endl;
         generalSearch(customState);
     } 
     else if (searchChoice == 2) {
-        cout << "Misplaced Tile Heuristic selected. Solving..." << endl;
+        cout << "Misplaced Tile Heuristic selected" << endl;
           misplacedTileSearch(customState);
     } 
     else if (searchChoice == 3) {
-        cout << "Manhattan Distance Heuristic selected. Solving..." << endl;
+        cout << "Manhattan Distance Heuristic selected" << endl;
         manhattanDistanceSearch(customState);
     } 
     else {
