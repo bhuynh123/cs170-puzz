@@ -1,5 +1,5 @@
 #include <iostream>
-#include <queue>
+
 #include <vector>
 #include <chrono>
 #include <algorithm>
@@ -225,6 +225,7 @@ void generalSearch(int initialState[w][w]) {
     //nodes = Make-Queue(MAKE-NODE(initialState))
     vector<Node*> explore;
     explore.push_back(new Node(initialState));
+    int maxQueueSize = 0;
 
     vector<Node*> visited;
     bool found = false;
@@ -243,10 +244,14 @@ void generalSearch(int initialState[w][w]) {
             cout << "Goal found" << endl;
             found = true;
             backtrace(currentNode);
+            cout << "Max queue size during search: " << maxQueueSize << endl;
             break;
         }
         //nodes = queueiong function(nodes, expand(nodes, problem.operators))
         branchingFunction(currentNode, explore, visited);
+        if(explore.size() > maxQueueSize) {
+            maxQueueSize = explore.size();
+        }
     }
 
     if (!found && explore.empty()) {
@@ -279,7 +284,7 @@ int misplacedTiles(Node* n) {
 void reorderByMisplaced(vector<Node*>& nodes) {
     //sort vector based on heuristic value of each node
     sort(nodes.begin(), nodes.end(), [](Node* a, Node* b) {
-        return misplacedTiles(a) < misplacedTiles(b);
+        return (misplacedTiles(a) + a->depth) < (misplacedTiles(b) + b->depth);
     });
 }
 
@@ -289,7 +294,7 @@ void misplacedTileSearch(int initialState[w][w]) {
     //nodes = Make-Queue(MAKE-NODE(initialState))
     vector<Node*> explore;
     explore.push_back(new Node(initialState));
-
+    int maxQueueSize = 0;
     vector<Node*> visited;
     bool found = false;
 
@@ -300,6 +305,7 @@ void misplacedTileSearch(int initialState[w][w]) {
         Node* currentNode = explore.front();
         explore.erase(explore.begin());
         visited.push_back(currentNode);
+     
 
 
         //if problem.GOAL-TEST(node.STATE) succeeds, return solution
@@ -307,11 +313,15 @@ void misplacedTileSearch(int initialState[w][w]) {
             cout << "Goal found" << endl;
             found = true;
             backtrace(currentNode);
+            cout << "Max queue size: " << maxQueueSize << endl;
             break;
         }
         //nodes = queueiong function(nodes, expand(nodes, problem.operators))
         branchingFunction(currentNode, explore, visited);
         reorderByMisplaced(explore);
+            if(explore.size() > maxQueueSize) {
+                maxQueueSize = explore.size();
+            }
 
     }
 
@@ -345,7 +355,7 @@ int manhattanDistance(Node* n) {
 void reorderByManhattan(vector<Node*>& nodes) {
     //sort vector based on heuristic value of each node
     sort(nodes.begin(), nodes.end(), [](Node* a, Node* b) {
-        return manhattanDistance(a) < manhattanDistance(b);
+        return (manhattanDistance(a) + a->depth) < (manhattanDistance(b) + b->depth);
     });
 }
 
@@ -353,6 +363,7 @@ void manhattanDistanceSearch(int initialState[w][w]) {
 
 //nodes = Make-Queue(MAKE-NODE(initialState))
     vector<Node*> explore;
+    int maxQueueSize = 0;
     explore.push_back(new Node(initialState));
 
     vector<Node*> visited;
@@ -372,11 +383,16 @@ void manhattanDistanceSearch(int initialState[w][w]) {
             cout << "Goal found" << endl;
             found = true;
             backtrace(currentNode);
+            cout << "Max queue size during search: " << maxQueueSize << endl;
             break;
         }
         //nodes = queueiong function(nodes, expand(nodes, problem.operators))
         branchingFunction(currentNode, explore, visited);
         reorderByManhattan(explore);
+
+        if(explore.size() > maxQueueSize) {
+            maxQueueSize = explore.size();
+        }
     }
 
     if (!found && explore.empty()) {
