@@ -201,15 +201,15 @@ void backtrace(Node* n) {
 
     // print boards from initial to goal
     for (int i = path.size() - 1; i >= 0; i--) {
-        printNode(path[i]);
-        cout << endl << "g(n) (depth): " << path[i]->depth << endl;
+        //printNode(path[i]);
+        //cout << endl << "g(n) (depth): " << path[i]->depth << endl;
 
         if(path[i]->misplaced != 100) {
-            cout << "Misplaced Tiles h(n): " << path[i]->misplaced << endl;
+        //    cout << "Misplaced Tiles h(n): " << path[i]->misplaced << endl;
         }
 
         if(path[i]->manhattan != 100) {
-            cout << "Manhattan Distance h(n): " << path[i]->manhattan << endl;
+        //    cout << "Manhattan Distance h(n): " << path[i]->manhattan << endl;
         }
          cout << endl;  
     }
@@ -320,9 +320,7 @@ void misplacedTileSearch(int initialState[w][w]) {
         }
         //nodes = queueiong function(nodes, expand(nodes, problem.operators))
         branchingFunction(currentNode, explore, visited);
-        //sorts queue by f(n)
         reorderByMisplaced(explore);
-
             if(explore.size() > maxQueueSize) {
                 maxQueueSize = explore.size();
             }
@@ -393,7 +391,6 @@ void manhattanDistanceSearch(int initialState[w][w]) {
         }
         //nodes = queueiong function(nodes, expand(nodes, problem.operators))
         branchingFunction(currentNode, explore, visited);
-        //sorts queue by f(n)
         reorderByManhattan(explore);
 
         if(explore.size() > maxQueueSize) {
@@ -409,7 +406,7 @@ void manhattanDistanceSearch(int initialState[w][w]) {
 
 int main() {
 
-    
+    /*
     cout << "Welcome to my 170 8-Puzzle Solver. Type '1' to use a default puzzle, or '2' to create your own" << endl;
     int choice;
     int customState[w][w];
@@ -496,7 +493,35 @@ int main() {
     else {
         cout << "Invalid choice. Exiting." << endl;
     }
-       
+        */
+
+    int depth1[3][3] = { {1, 2, 3} , {4, 5, 6} , {7, 8, 0} };
+    int depth2[3][3] = { {1, 2, 3} , {4, 5, 6} , {7, 0, 8} };
+    int depth3[3][3] = { {1, 2, 3} , {4, 0 , 6} , {7, 5, 8} };
+    int depth4[3][3] = { {1, 2, 3} , {0, 4, 6} , {7, 5, 8} };
+    int depth5[3][3] = { {0, 2, 3} , {1, 4, 6} , {7, 5, 8} };
+    int depth6[3][3] = { {2, 0, 3} , {1, 4, 6} , {7, 5, 8} };
+    int depth7[3][3] = { {2, 3, 0} , {1, 4, 6} , {7, 5, 8} };
+    int depth8[3][3] = { {2, 3, 6} , {1, 4, 0} , {7, 5, 8} };
+    int depth9[3][3] = { {2, 3, 6}, {1, 4, 8} , {7, 5, 0} };
+    int depth10[3][3] = { {2, 3, 6} , {1, 4, 8} , {7, 0, 5} };
+    int depth11[3][3] = { {2, 3, 6} , {1, 0, 8} , {7, 4, 5} };
+    int depth12[3][3] = { {2, 0, 6} , {1, 3, 8} , {7, 4, 5} };
+    int depth13[3][3] = { {2, 6, 0} , {1, 3, 8} , {7, 4, 5} };
+    int depth14[3][3] = { {2, 6, 8} , {1, 3, 0} , {7, 4, 5} };
+    int depth15[3][3] = { {2, 6, 8} , {1, 0, 3} , {7, 4, 5} };
+    int depth16[3][3] = { {2, 6, 8} , {0, 1, 3} , {7, 4, 5} };
+    int depth17[3][3] = { {2, 6, 8} , {7, 1, 3} , {0, 4, 5} };
+    int depth18[3][3] = { {2, 6, 8} , {7, 1, 3} , {4, 0, 5} };
+    int depth19[3][3] = { {2, 6, 8} , {7, 0, 3} , {4, 1, 5} };
+    int depth20[3][3] = { {2, 6, 8} , {0, 7, 3} , {4, 1, 5} };
+    int depth21[3][3] = { {0, 6, 8} , {2, 7, 3} , {4, 1, 5} };
+
+    generalSearch(depth15);
+    cout << "-----------------------------" << endl;
+    misplacedTileSearch(depth15);
+    cout << "-----------------------------" << endl;
+    manhattanDistanceSearch(depth15);
     
     return 0;
 }
