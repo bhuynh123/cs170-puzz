@@ -517,11 +517,11 @@ int main() {
     int depth20[3][3] = { {2, 6, 8} , {0, 7, 3} , {4, 1, 5} };
     int depth21[3][3] = { {0, 6, 8} , {2, 7, 3} , {4, 1, 5} };
 
-    generalSearch(depth15);
+    generalSearch(depth18);
     cout << "-----------------------------" << endl;
-    misplacedTileSearch(depth15);
+    misplacedTileSearch(depth18);
     cout << "-----------------------------" << endl;
-    manhattanDistanceSearch(depth15);
+    manhattanDistanceSearch(depth18);
     
     return 0;
 }

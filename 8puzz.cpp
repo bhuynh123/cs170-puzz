@@ -1,12 +1,11 @@
 #include <iostream>
-
 #include <vector>
 #include <chrono>
 #include <algorithm>
 
 using namespace std;
 
-//height, width
+//height, width, can be changed to make 15 puzzle or 24 puzzle, just need to change the state representation and goal test
 constexpr int w = 3;
 
 struct Node {
@@ -14,9 +13,10 @@ struct Node {
     Node* parent;   
     string action; //backtrace to parent
     int depth;
-    //hueristic values
+    //hueristic values (h(n))
     int misplaced;
     int manhattan;
+    int uniformCost;
 
     //copy over constructor
     Node(int initialState[w][w]) {
@@ -32,9 +32,11 @@ struct Node {
         misplaced = 100;
         // 4 is the most out of placed, 4 x 9  = 36 < n is impossible
         manhattan = 100;
+        uniformCost = 0;
     }
 };
 
+//subroutine to copy states
 void copyState(int end[w][w], const int original[w][w]) {
     for (int i = 0; i < w; i++) {
         for (int j = 0; j < w; j++) {
@@ -54,7 +56,7 @@ void printNode(Node* n) {
         cout << endl;
     }
 
-    cout << "Action: " << n->action << endl;
+    cout << "Action: " << n->action;
    
 }
 
@@ -64,7 +66,6 @@ bool redundantSearch(Node* n, const vector<Node*>& exploredAlready) {
         //reset to true each node
         bool identical = true;
         for (int i = 0; i < w; i++) {
-
             for (int j = 0; j < w; j++) {
                 //if at least one element is different, move on
                 if (n->state[i][j] != exploredNode->state[i][j]) {
@@ -90,7 +91,7 @@ bool redundantSearch(Node* n, const vector<Node*>& exploredAlready) {
 //intution youtuve video solving 8 puzzle bfs python
 //look for 0 which indicates empty space and swap with valid moves
 void branchingFunction(Node* n, vector<Node*>& explore, const vector<Node*>& exploredAlready)  {
-    //location (x,y) of zero
+    //store location (x,y) of zero
     int row = -1;
     int column = -1;
     for (int i = 0; i < w; i++) {
@@ -107,11 +108,12 @@ void branchingFunction(Node* n, vector<Node*>& explore, const vector<Node*>& exp
         }
     }
     //possible moves
-    
     //track the movement of 0 tile
     if (row > 0) { //up
         Node* upNode = new Node(n->state);
+        //move 0 up by swapping with tile above it
         swap(upNode->state[row][column], upNode->state[row-1][column]);
+        //if not found in explored already, add to explore queue, else delete node
         if (!redundantSearch(upNode, exploredAlready)) {
             upNode->parent = n;
             upNode->action = "up";
@@ -123,7 +125,9 @@ void branchingFunction(Node* n, vector<Node*>& explore, const vector<Node*>& exp
     }
     if (row < w - 1) { //down
         Node* downNode = new Node(n->state);
+        //move 0 down by swapping with tile below it
         swap(downNode->state[row][column], downNode->state[row+1][column]);
+        //if not found in explored already, add to explore queue, else delete node
         if (!redundantSearch(downNode, exploredAlready)) {
             downNode->parent = n;
             downNode->action = "down";
@@ -135,7 +139,9 @@ void branchingFunction(Node* n, vector<Node*>& explore, const vector<Node*>& exp
     }
     if (column > 0) { //left
         Node* leftNode = new Node(n->state);
+        //move 0 left by swapping with tile to the left
         swap(leftNode->state[row][column], leftNode->state[row][column-1]);
+        //if not found in explored already, add to explore queue, else delete node
         if (!redundantSearch(leftNode, exploredAlready)) {
             leftNode->parent = n;
             leftNode->action = "left";
@@ -147,7 +153,9 @@ void branchingFunction(Node* n, vector<Node*>& explore, const vector<Node*>& exp
     }
     if (column < w - 1) { //right
         Node* rightNode = new Node(n->state);
+        //move 0 right by swapping with tile to the right
         swap(rightNode->state[row][column], rightNode->state[row][column+1]);
+        //if not found in explored already, add to explore queue, else delete node
         if (!redundantSearch(rightNode, exploredAlready)) {
             rightNode->parent = n;
             rightNode->action = "right";
@@ -159,7 +167,7 @@ void branchingFunction(Node* n, vector<Node*>& explore, const vector<Node*>& exp
     }
 
 }
-
+//takes input to create goal state with the blank or 0 tile at the 2,2 index position
 void generateGoalState(int goalState[w][w]) {
     for(int i = 0; i < w; i++) {
         for(int j = 0; j < w; j++) {
@@ -168,15 +176,15 @@ void generateGoalState(int goalState[w][w]) {
     }
     goalState[w- 1][w - 1] = 0; 
 }
-
+//goal test, checks if current node state is the same as the goal state
 bool goalTest(Node* n) {
 
     int goalState[w][w];
 
     generateGoalState(goalState);
-
-    goalState[w-1][w-1] = 0; //set last element to 0
-
+    
+    //set last element to 0
+    goalState[w-1][w-1] = 0; 
     for(int i = 0; i < w; i++) {
         for(int j = 0; j < w; j++) {
             if(n->state[i][j] != goalState[i][j]) {
@@ -220,13 +228,21 @@ void backtrace(Node* n) {
     cout << endl;
 }
 
-void generalSearch(int initialState[w][w]) {
+//didn't add b/c cost of 0 
+void uniformCost(vector<Node*>& nodes) {
+    //since h(n) = 0 for uniform cost search, no need to reorder queue, branching function adds nodes in order of depth, so its already ordered by g(n)
+    sort(nodes.begin(), nodes.end(), [](Node* a, Node* b) {
+        return (a->uniformCost + a->depth) < (b->uniformCost + b->depth);
+    });
+}
+
+void uniformCostSearch(int initialState[w][w]) {
     
     //nodes = Make-Queue(MAKE-NODE(initialState))
     vector<Node*> explore;
     explore.push_back(new Node(initialState));
     int maxQueueSize = 0;
-
+    //store redundant states to avoid loops
     vector<Node*> visited;
     bool found = false;
 
@@ -245,11 +261,14 @@ void generalSearch(int initialState[w][w]) {
             found = true;
             backtrace(currentNode);
             cout << "Max queue size during search: " << maxQueueSize << endl;
-            cout << "Nodes Expolored: " << visited.size() << endl;
+            cout << "Nodes Explored: " << visited.size() << endl;
             break;
         }
         //nodes = queueiong function(nodes, expand(nodes, problem.operators))
         branchingFunction(currentNode, explore, visited);
+        //since h(n) = 0 for uniform cost search, no need to reorder queue, branching function adds nodes in order of depth, so its already ordered by g(n)
+
+
         if(explore.size() > maxQueueSize) {
             maxQueueSize = explore.size();
         }
@@ -264,14 +283,12 @@ void generalSearch(int initialState[w][w]) {
 int misplacedTiles(Node* n) {
     
     int goalState[w][w];
-
     generateGoalState(goalState);
-
     int value = 0;
 
     for(int i = 0; i < w; i++) {
         for(int j = 0; j < w; j++) {
-            // if nodes = goal state, not counting 0 or blank tile
+            // if nodes != goal state, not counting 0 or blank tile
             if(n->state[i][j] != goalState[i][j] && n->state[i][j] != 0) {
                 value++;
             }
@@ -289,13 +306,14 @@ void reorderByMisplaced(vector<Node*>& nodes) {
     });
 }
 
-//same as general search, but can't reorder a queue from the library so using a vector instead and sorting it based on the heuristic value of each node
+//same as uniform search, but can't reorder a queue from the library so using a vector instead and sorting it based on the heuristic value of each node
 void misplacedTileSearch(int initialState[w][w]) {
     
     //nodes = Make-Queue(MAKE-NODE(initialState))
     vector<Node*> explore;
     explore.push_back(new Node(initialState));
     int maxQueueSize = 0;
+    //store redundant states to avoid loops
     vector<Node*> visited;
     bool found = false;
 
@@ -306,8 +324,6 @@ void misplacedTileSearch(int initialState[w][w]) {
         Node* currentNode = explore.front();
         explore.erase(explore.begin());
         visited.push_back(currentNode);
-     
-
 
         //if problem.GOAL-TEST(node.STATE) succeeds, return solution
         if (goalTest(currentNode)) {
@@ -315,12 +331,12 @@ void misplacedTileSearch(int initialState[w][w]) {
             found = true;
             backtrace(currentNode);
             cout << "Max queue size: " << maxQueueSize << endl;
-            cout << "Nodes Expolored: " << visited.size() << endl;
+            cout << "Nodes Explored: " << visited.size() << endl;
             break;
         }
         //nodes = queueiong function(nodes, expand(nodes, problem.operators))
         branchingFunction(currentNode, explore, visited);
-        //sorts queue by f(n)
+        //sorts queue by f(n) = g(n) + h(n)
         reorderByMisplaced(explore);
 
             if(explore.size() > maxQueueSize) {
@@ -337,7 +353,7 @@ void misplacedTileSearch(int initialState[w][w]) {
 };
 
 int manhattanDistance(Node* n) {
-    
+    //hardcoded goal positions for each tile, index 0 is tile 1, index 1 is tile 2, etc.
     vector<pair<int, int>> goalPositions = { {0, 0}, {0, 1}, {0, 2}, {1, 0}, {1, 1}, {1, 2}, {2, 0}, {2, 1} };
     int value = 0;
 
@@ -345,7 +361,7 @@ int manhattanDistance(Node* n) {
         for(int j = 0; j < w; j++) {
         
             if( n->state[i][j] != 0) {
-
+                //calc manhattan dists = absc(current row - goal row) + abs(current col - goal col)
                 value += (abs(i - goalPositions[n->state[i][j] - 1].first) + abs(j - goalPositions[n->state[i][j] - 1].second));
                 
             }
@@ -369,7 +385,7 @@ void manhattanDistanceSearch(int initialState[w][w]) {
     vector<Node*> explore;
     int maxQueueSize = 0;
     explore.push_back(new Node(initialState));
-
+    //store redundant states to avoid loops
     vector<Node*> visited;
     bool found = false;
 
@@ -381,19 +397,18 @@ void manhattanDistanceSearch(int initialState[w][w]) {
         explore.erase(explore.begin());
         visited.push_back(currentNode);
 
-
         //if problem.GOAL-TEST(node.STATE) succeeds, return solution
         if (goalTest(currentNode)) {
             cout << "Goal found" << endl;
             found = true;
             backtrace(currentNode);
             cout << "Max queue size during search: " << maxQueueSize << endl;
-            cout << "Nodes Expolored: " << visited.size() << endl;
+            cout << "Nodes Explored: " << visited.size() << endl;
             break;
         }
         //nodes = queueiong function(nodes, expand(nodes, problem.operators))
         branchingFunction(currentNode, explore, visited);
-        //sorts queue by f(n)
+        //sorts queue by f(n) = g(n) + h(n)
         reorderByManhattan(explore);
 
         if(explore.size() > maxQueueSize) {
@@ -451,9 +466,7 @@ int main() {
     }
     if (choice == 2) {
         //custom puzzle
-        
         cout << " Enter your puzzle, using a zero to represent the blank. Please only enter valid 8-puzzles. " << endl;
-
         cout << "Enter the puzzle delimiting the numbers with a space. Once you have completed a line, PRESS ENTER to Start a new line" << endl;
 
         cout << "Example: " << endl;
@@ -483,7 +496,7 @@ int main() {
 
     if(searchChoice == 1) {
         cout << "Uniform Cost Search selected " << endl;
-        generalSearch(customState);
+        uniformCostSearch(customState);
     } 
     else if (searchChoice == 2) {
         cout << "Misplaced Tile Heuristic selected" << endl;
