@@ -1,6 +1,5 @@
 # cs170-puzz
-cs170porject
-
+cs170project
 Follow basic outline of search algorithm
 
 
